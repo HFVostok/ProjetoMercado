@@ -30,7 +30,6 @@ public class ListarProdutosView extends JPanel {
         JButton botaoCalcularTotal = new JButton("Calcular Total");
 
         // Adiciona os botões ao painelControles
-
         painelControles.add(botaoCalcularTotal);
 
         // Inicializa a lista de vendas
@@ -56,6 +55,23 @@ public class ListarProdutosView extends JPanel {
         // Tratamento de eventos dos botões
 
         // Método para adicionar uma venda à lista
+        botaoCalcularTotal.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                calcularTotalVendas();
+            }
+        });
+    }
 
+    // Método para calcular o total de vendas
+    private void calcularTotalVendas() {
+        double total = 0;
+
+        for (VendaRegister venda : listaVendas) {
+            total += venda.getTotal();
+        }
+
+        // Atualiza o rótulo com o total de vendas
+        labelTotal.setText("Total de Vendas: R$ " + String.format("%.2f", total));
     }
 }

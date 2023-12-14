@@ -118,21 +118,19 @@ public class ProdutoPainel extends JPanel {
         return campoQuantidade.getText();
     }
 
-    // Métodos para manipulação da tabela
-    public void adicionarProdutoNaTabela(Produto produto) {
-        modeloTabela.addRow(new Object[]{produto.getId(), produto.getNome(), produto.getQuantidade(), produto.getPreco()});
-    }
+    // Método para obter o produto selecionado na tabela
+    public Produto getProdutoSelecionado() {
+        int linhaSelecionada = tabelaProdutos.getSelectedRow();
 
-    public void limparTabela() {
-        modeloTabela.setRowCount(0);
-    }
-
-    public void atualizarTabela(List<Produto> listaProdutos) {
-        limparTabela();
-        for (Produto produto : listaProdutos) {
-            adicionarProdutoNaTabela(produto);
+        if (linhaSelecionada == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto", "Erro", JOptionPane.ERROR_MESSAGE);
+            return null;
         }
-    }
 
-    // Outros métodos conforme necessário
-}
+        // Obtém os dados do produto na linha selecionada
+        String id = (String) tabelaProdutos.getValueAt(linhaSelecionada, 0);
+        String nome = (String) tabelaProdutos.getValueAt(linhaSelecionada, 1);
+        String quantidade = (String) tabelaProdutos.getValueAt(linhaSelecionada, 2);
+        String preco = (String) tabelaProdutos.getValueAt(linhaSelecionada, 3);
+
+    }}
