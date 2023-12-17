@@ -1,29 +1,27 @@
 package View;
 
-import Model.Produto;
-import Controller.ProdutosController;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import Connection.ProdutoDAO;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
+
 
 public class ProdutoPainel extends JPanel {
 
     private JTextField campoId, campoNome, campoPreco, campoQuantidade;
     private JButton botaoCadastrar, botaoLimparCampos, botaoExcluirProduto;
-    private JTable tabelaProdutos;
-    private DefaultTableModel modeloTabela;
-    private ProdutosController produtosController;
+
+
+    private JTable table;
+    private DefaultTableModel tableModel;
+
 
     public ProdutoPainel() {
         // Configurações básicas do JPanel
         setLayout(new BorderLayout());
-
-        // Inicializa o controller
-        produtosController = new ProdutosController(this);
 
         // Adiciona um painel superior para os campos e botão
         JPanel painelCampos = new JPanel(new GridLayout(5, 2));
@@ -39,15 +37,6 @@ public class ProdutoPainel extends JPanel {
         JLabel labelQuantidade = new JLabel("Quantidade:");
         campoQuantidade = new JTextField();
 
-        // Botão para cadastrar os dados
-        botaoCadastrar = new JButton("Cadastrar");
-        botaoCadastrar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                produtosController.cadastrarProduto();
-            }
-        });
-
         // Adiciona os componentes ao painelCampos
         painelCampos.add(labelId);
         painelCampos.add(campoId);
@@ -57,41 +46,47 @@ public class ProdutoPainel extends JPanel {
         painelCampos.add(campoPreco);
         painelCampos.add(labelQuantidade);
         painelCampos.add(campoQuantidade);
-        painelCampos.add(new JLabel()); // Espaço vazio para melhorar a aparência
-        painelCampos.add(botaoCadastrar);
 
-        // Configurações da tabela
-        modeloTabela = new DefaultTableModel();
-        modeloTabela.addColumn("ID");
-        modeloTabela.addColumn("Nome");
-        modeloTabela.addColumn("Quantidade");
-        modeloTabela.addColumn("Preço");
-
-        tabelaProdutos = new JTable(modeloTabela);
-        JScrollPane scrollPane = new JScrollPane(tabelaProdutos);
-
-        // Adiciona a tabela ao JPanel
-        add(scrollPane, BorderLayout.CENTER);
+        JScrollPane jSPane = new JScrollPane();
+        add(jSPane);
+        tableModel = new DefaultTableModel(new Object[][] {},
+                new String[] { "Codigo", "Descrição", "Preço", "Subtotal" });
+        table = new JTable(tableModel);
+        jSPane.setViewportView(table);
 
         // Cria e configura o painelControles
         JPanel painelControles = new JPanel(new FlowLayout());
         add(painelControles, BorderLayout.SOUTH);
 
-        // Botão para limpar os campos
-        botaoLimparCampos = new JButton("Limpar Campos");
-        botaoLimparCampos.addActionListener(new ActionListener() {
+        // Botão para cadastrar os dados
+        botaoCadastrar = new JButton("Cadastrar");
+        // Botão para excluir o produto selecionado na tabela
+        botaoExcluirProduto = new JButton("Excluir Produto");
+
+        // cria banco de dados
+        new ProdutoDAO().criaTabela();
+        // executar o método de atualizar tabela
+
+        //======================tratamento de eventos =====================================
+
+        botaoCadastrar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                produtosController.limparCampos();
+                cadastrarProduto();
             }
         });
 
-        // Botão para excluir o produto selecionado na tabela
-        botaoExcluirProduto = new JButton("Excluir Produto");
+        botaoLimparCampos.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                limparCampos();
+            }
+        });
+
         botaoExcluirProduto.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                produtosController.excluirProduto();
+                excluirProduto();
             }
         });
 
@@ -101,36 +96,49 @@ public class ProdutoPainel extends JPanel {
         painelControles.add(botaoExcluirProduto);
     }
 
-    // Métodos para acessar os dados dos campos
-    public String getCampoId() {
-        return campoId.getText();
-    }
+    // Método para cadastrar um novo produto
+    // Método para cadastrar um novo produto
+    private void cadastrarProduto() {
+        String id = campoId.getText();
+        String nome = campoNome.getText();
+        String precoStr = campoPreco.getText();
+        String quantidadeStr = campoQuantidade.getText();
 
-    public String getCampoNome() {
-        return campoNome.getText();
-    }
-
-    public String getCampoPreco() {
-        return campoPreco.getText();
-    }
-
-    public String getCampoQuantidade() {
-        return campoQuantidade.getText();
-    }
-
-    // Método para obter o produto selecionado na tabela
-    public Produto getProdutoSelecionado() {
-        int linhaSelecionada = tabelaProdutos.getSelectedRow();
-
-        if (linhaSelecionada == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione um produto", "Erro", JOptionPane.ERROR_MESSAGE);
-            return null;
+        // Verifica se os campos estão preenchidos
+        if (id.isEmpty() || nome.isEmpty() || precoStr.isEmpty() || quantidadeStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Preencha todos os campos.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
         }
 
-        // Obtém os dados do produto na linha selecionada
-        String id = (String) tabelaProdutos.getValueAt(linhaSelecionada, 0);
-        String nome = (String) tabelaProdutos.getValueAt(linhaSelecionada, 1);
-        String quantidade = (String) tabelaProdutos.getValueAt(linhaSelecionada, 2);
-        String preco = (String) tabelaProdutos.getValueAt(linhaSelecionada, 3);
+        // Converte os valores dos campos para os tipos corretos
+        double preco = Double.parseDouble(precoStr);
+        int quantidade = Integer.parseInt(quantidadeStr);
 
-    }}
+        // Adiciona uma nova linha à tabela
+        Object[] rowData = { id, nome, preco, quantidade, preco * quantidade }; // Adiciona a coluna de subtotal
+        tableModel.addRow(rowData);
+
+        // Limpa os campos após cadastrar
+        limparCampos();
+    }
+
+    // Método para limpar os campos
+    private void limparCampos() {
+        campoId.setText("");
+        campoNome.setText("");
+        campoPreco.setText("");
+        campoQuantidade.setText("");
+    }
+
+    // Método para excluir o produto selecionado
+    private void excluirProduto() {
+        int selectedRow = table.getSelectedRow(); // Corrigido para usar o nome correto da tabela
+        if (selectedRow != -1) {
+            tableModel.removeRow(selectedRow);
+        } else {
+            JOptionPane.showMessageDialog(this, "Selecione um produto para excluir.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+}

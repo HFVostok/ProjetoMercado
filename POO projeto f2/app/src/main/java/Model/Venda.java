@@ -1,12 +1,12 @@
 package Model;
 
 public class Venda {
-    private int id;
+    private String id;
     private String nome;
-    private double preco;
-    private int quantidade;
+    private String preco;
+    private String quantidade;
 
-    public Venda(int id, String nome, double preco, int quantidade) {
+    public Venda(String id, String nome, String preco, String quantidade) {
         this.id = id;
         this.nome = nome;
         this.preco = preco;
@@ -14,12 +14,12 @@ public class Venda {
     }
 
     // Getter para o atributo 'id'
-    public int getId() {
+    public String getId() {
         return id;
     }
 
     // Setter para o atributo 'id'
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -34,22 +34,22 @@ public class Venda {
     }
 
     // Getter para o atributo 'preco'
-    public double getPreco() {
+    public String getPreco() {
         return preco;
     }
 
     // Setter para o atributo 'preco'
-    public void setPreco(double preco) {
+    public void setPreco(String preco) {
         this.preco = preco;
     }
 
     // Getter para o atributo 'quantidade'
-    public int getQuantidade() {
+    public String getQuantidade() {
         return quantidade;
     }
 
     // Setter para o atributo 'quantidade'
-    public void setQuantidade(int quantidade) {
+    public void setQuantidade(String quantidade) {
         this.quantidade = quantidade;
     }
 }

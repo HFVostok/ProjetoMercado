@@ -1,51 +1,40 @@
 package Model;
 
 public class VendaRegister {
+    private String cpf;
+    private String dataHora;
+    private String total;
 
-//atributos
+    // Construtor
+    public VendaRegister(String cpf, String dataHora, String total) {
+        this.cpf = cpf;
+        this.dataHora = dataHora;
+        this.total = total;
+    }
 
-private String cpf;
-private String id;
-private String datahora;
-private String total;
+    public String getCpf() {
+        return cpf;
+    }
 
-//construtores
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
 
-public VendaRegister(String cpf, String id, String datahora, String total) {
-    this.cpf = cpf;
-    this.id = id;
-    this.datahora = datahora;
-    this.total = total;
-}
+    public String getDataHora() {
+        return dataHora;
+    }
 
-//getters e setters
+    public void setDataHora(String dataHora) {
+        this.dataHora = dataHora;
+    }
 
-public String getCpf() {
-    return cpf;
-}
+    public String getTotal() {
+        return total;
+    }
 
-public String getId() {
-    return id;
-}
+    public void setTotal(String total) {
+        this.total = total;
+    }
 
-public void setId(String id) {
-    this.id = id;
-}
-
-public String getDatahora() {
-    return datahora;
-}
-
-public void setDatahora(String datahora) {
-    this.datahora = datahora;
-}
-
-public String getTotal() {
-    return total;
-}
-
-public void setTotal(String total) {
-    this.total = total;
-}
-
+    
 }

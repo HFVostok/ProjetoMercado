@@ -1,32 +1,52 @@
 package View;
 
-import Controller.VendaController;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
+import Connection.ClientesDAO;
+import Connection.VendaRegisterDAO;
+import Connection.VendasDAO;
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import Model.Venda;
+import Model.Cliente;
+import Model.Produto;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class VendasPainel extends JPanel {
     // Componentes da GUI
     private JPanel painelCliente, painelVenda, painelBotoes, painelCodigoQuantidade;
-    private JLabel labelCliente, labelCodigo, labelQuantidade, labelTotal, labelInsiraCodigo;
-    private JTextField campoCliente, campoCodigo, campoQuantidade, campoModeloVenda;
+    private JLabel labelCliente, labelCodigo, labelQuantidade, labelTotal;
+    private JTextField campoCliente, campoCodigo, campoQuantidade;
     private JButton botaoBuscar, botaoAdicionar, botaoFinalizar, botaoCadastrar;
-    private JTable tabelaVenda;
-    private DefaultTableModel modeloVenda;
     private JCheckBox checkVIP;
-    private JScrollPane scrollVenda;
-    private double totalVenda = 0.0;
+    private JTable table;
+    private DefaultTableModel tableModel;
+    private DefaultTableModel modeloVenda;
+    private int linhaSelecionada = -1;
+    private VendasDAO vendasDAO;
+    private ClientesDAO clientesDAO;
+    private boolean clienteVIP = false;
+    private VendaRegisterDAO vendaRegisterDAO;
 
-    private VendaController vendaController;
+    // private VendaController vendaController;
+
+    public DefaultTableModel getModeloVenda() {
+        return modeloVenda;
+    }
 
     public VendasPainel() {
+        vendaRegisterDAO = new VendaRegisterDAO();
         // Cria o painel principal com GridLayout (3 rows, 1 column)
         setLayout(new GridLayout(3, 1));
-
+        vendasDAO = new VendasDAO();
         // Cria o painel do cliente
         painelCliente = new JPanel();
         painelCliente.setBorder(BorderFactory.createTitledBorder("Cliente"));
@@ -87,37 +107,15 @@ public class VendasPainel extends JPanel {
         gbc.gridx++;
         painelVenda.add(painelCodigoQuantidade, gbc);
         gbc.gridx = 0;
-        gbc.gridwidth = 5; // Ocupa cinco colunas
+        gbc.gridwidth = 2; // Ocupa duas colunas
         painelVenda.add(labelTotal, gbc);
 
-        // Cria o modelo da tabela da venda
-        modeloVenda = new DefaultTableModel();
-        // Define as colunas do modelo
-        modeloVenda.addColumn("Código");
-        modeloVenda.addColumn("Descrição");
-        modeloVenda.addColumn("Quantidade");
-        modeloVenda.addColumn("Preço");
-        modeloVenda.addColumn("Subtotal");
-
-        // Cria a tabela da venda
-        tabelaVenda = new JTable(modeloVenda);
-        // Define o tamanho das colunas da tabela
-        tabelaVenda.getColumnModel().getColumn(0).setPreferredWidth(50);
-        tabelaVenda.getColumnModel().getColumn(1).setPreferredWidth(300);
-        tabelaVenda.getColumnModel().getColumn(2).setPreferredWidth(50);
-        tabelaVenda.getColumnModel().getColumn(3).setPreferredWidth(50);
-        tabelaVenda.getColumnModel().getColumn(4).setPreferredWidth(50);
-        // Define a tabela como não editável
-        tabelaVenda.setEnabled(false);
-
-        // Cria o scroll da tabela da venda
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.gridwidth = 2; // Ocupa duas colunas
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        painelVenda.add(new JScrollPane(tabelaVenda), gbc);
+        JScrollPane jSPane = new JScrollPane();
+        add(jSPane);
+        tableModel = new DefaultTableModel(new Object[][] {},
+                new String[] { "Codigo", "Descrição", "Preço", "Quantidade", "Subtotal" });
+        table = new JTable(tableModel);
+        jSPane.setViewportView(table);
 
         // Adiciona o painel da venda ao painel principal
         add(painelVenda);
@@ -137,13 +135,56 @@ public class VendasPainel extends JPanel {
         // Adiciona o painel dos botões ao painel principal
         add(painelBotoes);
 
-          vendaController = new VendaController(this);
+        // Chama os metodos da classe's DAO para a criação de tabelas no banco de dados
+        new VendaRegisterDAO().criaTabela();
+        new ClientesDAO().criaTabelaCL();
+
+        // Tratamento de Eventos dos botões
 
         // Tratamento de eventos para o botão "Adicionar"
         botaoAdicionar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                vendaController.adicionarProduto();
+                adicionarItem();
+            }
+        });
+        // Tratamento de eventos para o botão "Buscar"
+        botaoBuscar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                buscarCliente();
+            }
+        });
+
+        // tratamento para click do mouse na tabela
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+                linhaSelecionada = table.rowAtPoint(evt.getPoint());
+                if (linhaSelecionada != -1) {
+                    campoCodigo.setText((String) table.getValueAt(linhaSelecionada, 0));
+
+                }
+            }
+        });
+
+        checkVIP.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clienteVIP = checkVIP.isSelected();
+                if (clienteVIP) {
+                    JOptionPane.showMessageDialog(VendasPainel.this, "Cliente VIP selecionado!");
+                } else {
+                    JOptionPane.showMessageDialog(VendasPainel.this, "Cliente VIP desmarcado!");
+                }
+            }
+        });
+
+        // Tratamento de eventos para o botão "Adicionar"
+        botaoAdicionar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                adicionarItem();
             }
         });
 
@@ -151,41 +192,216 @@ public class VendasPainel extends JPanel {
         botaoFinalizar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                vendaController.finalizarVenda();
+                calcularTotal();
+            }
+        });
+        botaoCadastrar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cadastrarNovoCliente();
+            }
+        });
+        botaoFinalizar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                finalizarVenda();
             }
         });
     }
 
-    // Métodos necessários
-    public JTextField getCampoCodigo() {
-        return campoCodigo;
+    // Metodos
+    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    // adiciona itens
+    private void adicionarItem() {
+        try {
+            String codigo = campoCodigo.getText();
+            String quantidadeText = campoQuantidade.getText();
+
+            // Verifica se os campos estão vazios
+            if (codigo.isEmpty() || quantidadeText.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Preencha os campos Código e Quantidade antes de adicionar.");
+                return;
+            }
+
+            // Verifica se o código e a quantidade são Strings
+            if (!(codigo instanceof String) || !(quantidadeText instanceof String)) {
+                JOptionPane.showMessageDialog(this, "Código e Quantidade devem ser do tipo String.");
+                return;
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Erro ao processar os campos. Certifique-se de que os valores são do tipo String.");
+        }
     }
 
-    public JTextField getCampoQuantidade() {
-        return campoQuantidade;
+    private void cadastrarNovoCliente() {
+        JTextField cpfField = new JTextField();
+        JTextField nomeField = new JTextField();
+        JTextField idadeField = new JTextField();
+
+        Object[] message = {
+                "CPF:", cpfField,
+                "Nome:", nomeField,
+                "Idade:", idadeField
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Cadastro de Cliente", JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                String cpf = cpfField.getText();
+                String nome = nomeField.getText();
+                String idade = idadeField.getText();
+
+                // Verifica se os campos estão vazios
+                if (cpf.isEmpty() || nome.isEmpty() || idade.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Preencha todos os campos antes de cadastrar o cliente.");
+                    return;
+                }
+
+                // Verifica se os campos são Strings
+                if (!(cpf instanceof String) || !(nome instanceof String) || !(idade instanceof String)) {
+                    JOptionPane.showMessageDialog(this, "CPF, Nome e Idade devem ser do tipo String.");
+                    return;
+                }
+
+                // Verifica se o CPF já existe
+                if (clientesDAO.buscarCPF(cpf) == null) {
+                    // Realiza o cadastro do cliente
+                    clientesDAO.cadastrarCL(cpf, nome, idade);
+                    JOptionPane.showMessageDialog(this, "Cliente cadastrado com sucesso!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "CPF já cadastrado!");
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "Erro ao processar os campos. Certifique-se de que os valores são do tipo String.");
+            }
+        }
     }
 
-    public JTable getTabelaVenda() {
-        return tabelaVenda;
+    // calcula o total
+    private void calcularTotal() {
+        double total = 0;
+
+        // Itera sobre as linhas da tabela
+        for (int i = 0; i < table.getRowCount(); i++) {
+            // Obtém o código do produto da coluna "Código"
+            String codigo = table.getValueAt(i, 0).toString();
+
+            // Chama o método buscarProdutoPorCodigo da instância de VendasDAO
+            Produto produto = vendasDAO.buscarProdutoPorCodigo(codigo);
+
+            // Se encontrar o produto, atualiza os valores na tabela
+            if (produto != null) {
+                table.setValueAt(produto.getDescricao(), i, 1);
+                table.setValueAt(Double.parseDouble(produto.getPreco()), i, 2);
+            }
+
+            // Obtém os valores das colunas "Quantidade" e "Preço"
+            int quantidade = Integer.parseInt(table.getValueAt(i, 2).toString());
+            double preco = Double.parseDouble(table.getValueAt(i, 3).toString());
+
+            // Calcula o subtotal multiplicando quantidade por preço
+            double subtotal = quantidade * preco;
+
+            // Se o cliente for VIP, aplica um desconto de 20%
+            if (clienteVIP) {
+                subtotal *= 0.8; // 20% de desconto
+            }
+
+            // Atribui o subtotal à coluna "Subtotal"
+            table.setValueAt(subtotal, i, 4);
+
+            // Acumula a soma total
+            total += subtotal;
+        }
+
+        // Exibe o total em um JOptionPane
+        JOptionPane.showMessageDialog(this, "Total da venda: R$ " + String.format("%.2f", total));
     }
 
-    public void atualizarTotal(double subtotal) {
-        totalVenda += subtotal;
-        labelTotal.setText("Total: R$ " + String.format("%.2f", totalVenda));
+    private void buscarCliente() {
+        String cpf = campoCliente.getText();
+
+        // Chama o método buscarCPF da instância de VendasDAO
+        Cliente cliente = clientesDAO.buscarCPF(cpf);
+
+        if (cliente != null) {
+            JOptionPane.showMessageDialog(this,
+                    "Cliente cadastrado:\nNome: " + cliente.getNome() + "\nIdade: " + cliente.getIdade());
+        } else {
+            JOptionPane.showMessageDialog(this, "O cliente não possui cadastro.");
+        }
     }
 
-    public void limparCampos() {
+    // Adicione este método à sua classe VendasPainel
+    private void finalizarVenda() {
+        // Verifica se há itens na tabela
+        if (tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Adicione itens à tabela antes de finalizar a venda.");
+            return;
+        }
+
+        String cpfCliente = campoCliente.getText();
+        if (cpfCliente.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe o CPF do cliente antes de finalizar a venda.");
+            return;
+        }
+
+        // Obtém a data e hora do evento (assumindo que você tem um método para isso)
+        String dataHoraEvento = obterDataHoraEvento();
+
+        // Calcula o valor total da venda
+        String valorTotal = calcularValorTotal();
+
+        // Chama o método atualizar da instância de VendaRegisterDAO
+        VendaRegisterDAO vendaRegisterDAO = new VendaRegisterDAO();
+        vendaRegisterDAO.atualizar(cpfCliente, dataHoraEvento, valorTotal);
+
+        // Limpa a tabela e os campos
+        limparTabelaEFields();
+        vendaRegisterDAO.atualizar(cpfCliente, dataHoraEvento, valorTotal);
+    }
+
+    // Método para obter a data e hora do evento
+    private String obterDataHoraEvento() {
+        // Obtém a data e hora atual
+        Date dataAtual = new Date();
+
+        // Define o formato desejado (ano-mês-dia hora:minuto:segundo)
+        SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        // Formata a data e hora atual de acordo com o formato
+        return formato.format(dataAtual);
+    }
+
+    // Método para calcular o valor total da venda e retornar como String formatada
+    private String calcularValorTotal() {
+        double total = 0;
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            total += Double.parseDouble(table.getValueAt(i, 4).toString());
+        }
+
+        // Formata o total como uma string
+        return String.format("%.2f", total);
+    }
+
+    // Método para limpar a tabela e os campos
+    private void limparTabelaEFields() {
+        // Limpa a tabela
+        tableModel.setRowCount(0);
+
+        // Limpa os campos
+        campoCliente.setText("");
         campoCodigo.setText("");
         campoQuantidade.setText("");
-    }
-
-    public void limparTabela() {
-        modeloVenda.setRowCount(0); // Remove todas as linhas da tabela
-        totalVenda = 0.0;
         labelTotal.setText("Total: R$ 0.00");
+        checkVIP.setSelected(false);
+
+        JOptionPane.showMessageDialog(this, "Venda finalizada com sucesso!");
     }
 
-    public double getTotalVenda() {
-        return totalVenda;
-    }
 }

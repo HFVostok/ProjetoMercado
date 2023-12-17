@@ -1,4 +1,3 @@
-
 package View;
 
 import Model.VendaRegister;
@@ -10,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class ListarProdutosView extends JPanel {
 
@@ -52,26 +52,33 @@ public class ListarProdutosView extends JPanel {
         labelTotal = new JLabel("Total de Vendas: R$ 0.00");
         add(labelTotal, BorderLayout.SOUTH);
 
-        // Tratamento de eventos dos botões
-
-        // Método para adicionar uma venda à lista
+        // Tratamento de eventos do botão "Calcular Total"
         botaoCalcularTotal.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 calcularTotalVendas();
             }
         });
+
     }
+
 
     // Método para calcular o total de vendas
     private void calcularTotalVendas() {
-        double total = 0;
-
-        for (VendaRegister venda : listaVendas) {
-            total += venda.getTotal();
+        double totalVendas = 0;
+    
+        // Itera sobre as linhas da tabela
+        for (int i = 0; i < modeloTabela.getRowCount(); i++) {
+            // Obtém o valor da coluna "Total" e converte para double
+            double totalVendaLinha = Double.parseDouble(modeloTabela.getValueAt(i, 3).toString());
+            // Soma o valor ao total geral
+            totalVendas += totalVendaLinha;
         }
-
-        // Atualiza o rótulo com o total de vendas
-        labelTotal.setText("Total de Vendas: R$ " + String.format("%.2f", total));
+    
+        // Formata o total como uma string e exibe no rótulo
+        labelTotal.setText("Total de Vendas: R$ " + String.format("%.2f", totalVendas));
     }
+    
+
+
 }

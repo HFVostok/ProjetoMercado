@@ -1,13 +1,13 @@
 package Model;
 
 public class Produto {
-    private int id;
+    private String id;
     private String codigo;
     private String descricao;
-    private double preco;
+    private String preco;
 
     // Construtor
-    public Produto(int id, String codigo, String descricao, double preco) {
+    public Produto(String id, String codigo, String descricao, String preco) {
         this.id = id;
         this.codigo = codigo;
         this.descricao = descricao;
@@ -15,11 +15,11 @@ public class Produto {
     }
 
     // Getters e Setters
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -39,11 +39,11 @@ public class Produto {
         this.descricao = descricao;
     }
 
-    public double getPreco() {
+    public String getPreco() {
         return preco;
     }
 
-    public void setPreco(double preco) {
+    public void setPreco(String preco) {
         this.preco = preco;
     }
 
